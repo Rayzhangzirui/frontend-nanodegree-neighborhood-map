@@ -1,0 +1,33 @@
+html,
+body {
+  font-family: Arial, sans-serif;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+
+.dropdown {
+  z-index: 1;
+}
+
+.btn {
+    background-color : transparent;
+}
+
+.dropdown-menu {
+  width:500px;
+}
+
+#map {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+
+}
+
+#pano {
+        width: 200px;
+        height: 200px;
+}
+
