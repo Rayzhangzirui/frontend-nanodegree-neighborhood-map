@@ -44,13 +44,13 @@ function initMap() {
       id: i
       });
 
-    marker.title = title;
     marker.listvisible = ko.observable(true);
     marker.setMap(map);
     // Push the marker to our array of markers.
     markers.push(marker);
     // Create an onclick event to open the large infowindow at each marker.
     marker.addListener('click', function() {
+            map.setCenter(this.getPosition());
             populateInfoWindow(this, largeInfowindow);
     });
 
@@ -75,26 +75,26 @@ function initMap() {
       infowindow.open(map, marker);
       getFlickrImages();
 
-          function getFlickrImages() {
-           var flickrUrl = 'https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=ab2be4f78cbc26981e3fe484038ad122&sort=interestingness-desc&extras=url_s&format=json&text='+marker.title.replace(/\s/g,'');
+      function getFlickrImages() {
+       var flickrUrl = 'https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=ab2be4f78cbc26981e3fe484038ad122&sort=interestingness-desc&extras=url_s&format=json&text='+marker.title.replace(/\s/g,'');
 
-           console.log(flickrUrl);
-                  $.ajax({
-                  url: flickrUrl,
-                  dataType: 'jsonp',
-                  jsonp: 'jsoncallback',
-                  success: function(data) {
-                      var photoUrl = data.photos.photo[1].url_s;
-                      console.log(photoUrl);
-                      infowindow.setContent('<h3>' + marker.title + '</h3><div id="pano"></div>');
-                      $('#pano').append('<img src='+photoUrl+'>');
-                  },
-                  error: function() {
-                    infowindow.setContent('<div>' + marker.title + '</div>' +
-                      '<div>No Street View Found</div>');
-                  }
-              });
-          }
+       console.log(flickrUrl);
+        $.ajax({
+        url: flickrUrl,
+        dataType: 'jsonp',
+        jsonp: 'jsoncallback',
+        success: function(data) {
+            var photoUrl = data.photos.photo[1].url_s;
+            console.log(photoUrl);
+            infowindow.setContent('<h3>' + marker.title + '</h3><div id="pano"></div>');
+            $('#pano').append('<img src='+photoUrl+'>');
+        },
+        error: function() {
+          infowindow.setContent('<div>' + marker.title + '</div>' +
+            '<div>No Street View Found</div>');
+        }
+        });
+      }
     }
   }
 
@@ -141,9 +141,13 @@ function initMap() {
     var search = self.filterWord().toLowerCase();
     return ko.utils.arrayFilter(markers, function(marker) {
       if (marker.title.toLowerCase().indexOf(search) !== -1) {
+            marker.setVisible(true);
             return marker.listvisible(true);
+
       } else {
+            marker.setVisible(false);
             return marker.listvisible(false);
+            
       }
       });
     });
