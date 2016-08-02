@@ -1,7 +1,7 @@
 var map;
 
 var markers=[];
-
+// data
 locations =  [
     {title: 'Empire State Building', location: {lat: 40.748441, lng: -73.985664}},
     {title: 'Statue of Liberty', location: {lat: 40.689249, lng: -74.044500}},
@@ -11,30 +11,23 @@ locations =  [
     {title: 'MoMA', location: {lat: 40.712784, lng: -74.005941}}
     ];
 
-
-// Create a new blank array for all the listing markers.
 function initMap() {
-  // Create a styles array to use with the map.
-  var styles = [];
-  // Constructor creates a new map - only center and zoom are required.
+  // Constructor creates a new map 
   map = new google.maps.Map(document.getElementById('map'), {
     center: {lat: 40.7413549, lng: -73.9980244},
     zoom: 12,
-    styles: styles,
     mapTypeControl: false
   });
-
 
   var defaultIcon = makeMarkerIcon('0091ff');
   var highlightedIcon = makeMarkerIcon('FFFF24');
   var largeInfowindow = new google.maps.InfoWindow();
 
-  // The following group uses the location array to create an array of markers on initialize.
+  //use the location array to create an array of markers on initialize.
   for (var i = 0; i < locations.length; i++) {
     // Get the position from the location array.
     var position = locations[i].location;
     var title = locations[i].title;
-    var marker = {};
     // Create a marker per location, and put into markers array.
     var marker = new google.maps.Marker({
       position: position,
@@ -43,8 +36,9 @@ function initMap() {
       icon: defaultIcon,
       id: i
       });
-
+    //knockout observable to control list visibility
     marker.listvisible = ko.observable(true);
+    //set up markers in map
     marker.setMap(map);
     // Push the marker to our array of markers.
     markers.push(marker);
@@ -61,6 +55,14 @@ function initMap() {
       this.setIcon(defaultIcon);
     });
   }
+
+  // when click drop down, close all infowindwo
+  $('.dropdown').on('show.bs.dropdown', function () {
+    for (var i = 0; i < markers.length;i++){
+          largeInfowindow.close();
+        };
+  })
+
   // define infowindow
   function populateInfoWindow(marker, infowindow) {
     // Check to make sure the infowindow is not already opened on this marker.
@@ -72,53 +74,10 @@ function initMap() {
       infowindow.addListener('closeclick', function() {
         infowindow.marker = null;
       });
+      getFlickrImages(marker,infowindow);
       infowindow.open(map, marker);
-      getFlickrImages();
-
-      function getFlickrImages() {
-       var flickrUrl = 'https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=ab2be4f78cbc26981e3fe484038ad122&sort=interestingness-desc&extras=url_s&format=json&text='+marker.title.replace(/\s/g,'');
-
-       console.log(flickrUrl);
-        $.ajax({
-        url: flickrUrl,
-        dataType: 'jsonp',
-        jsonp: 'jsoncallback',
-        success: function(data) {
-            var photoUrl = data.photos.photo[1].url_s;
-            console.log(photoUrl);
-            infowindow.setContent('<h3>' + marker.title + '</h3><div id="pano"></div>');
-            $('#pano').append('<img src='+photoUrl+'>');
-        },
-        error: function() {
-          infowindow.setContent('<div>' + marker.title + '</div>' +
-            '<div>No Street View Found</div>');
-        }
-        });
-      }
     }
   }
-
-  //   function getStreetView(data, status) {
-  //           if (status == google.maps.StreetViewStatus.OK) {
-  //             var nearStreetViewLocation = data.location.latLng;
-  //             var heading = google.maps.geometry.spherical.computeHeading(
-  //               nearStreetViewLocation, marker.position);
-  //               infowindow.setContent('<div>' + marker.title + '</div><div id="pano"></div>');
-  //               var panoramaOptions = {
-  //                 position: nearStreetViewLocation,
-  //                 pov: {
-  //                   heading: heading,
-  //                   pitch: 30
-  //                 }
-  //               };
-  //             var panorama = new google.maps.StreetViewPanorama(
-  //               document.getElementById('pano'), panoramaOptions);
-  //           } else {
-  //             infowindow.setContent('<div>' + marker.title + '</div>' +
-  //               '<div>No Street View Found</div>');
-  //           }
-  //         }
-  // }
 
   function makeMarkerIcon(markerColor) {
         var markerImage = new google.maps.MarkerImage(
@@ -129,13 +88,36 @@ function initMap() {
           new google.maps.Point(10, 34),
           new google.maps.Size(21,34));
         return markerImage;
-      }
+  }
+
+  function getFlickrImages(marker,infowindow) {
+    var flickrUrl = 'https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=ab2be4f78cbc26981e3fe484038ad122&sort=interestingness-desc&extras=url_q&format=json&text='+marker.title.replace(/\s/g,'');
+    var templateImage = document.querySelector('#temp').content.querySelectorAll('img');
+    var templateheader = document.querySelector('#temp').content.querySelector('h4');
+    $.ajax({
+    url: flickrUrl,
+    dataType: 'jsonp',
+    jsonp: 'jsoncallback',
+    success: function(data) {
+        //get top 3 image into carousel
+        for (var i = 0; i<3;i++){
+          var photoUrl = data.photos.photo[i].url_q;
+          templateImage[i].src = photoUrl;
+          templateheader.textContent = marker.title;
+        }
+        infowindow.setContent($('#temp').html());
+    },
+    error: function() {
+      infowindow.setContent('<div>' + marker.title + '</div>' +
+        '<div>No Street View Found</div>');
+    }
+    });
+  }
 
   function viewModel () {
     var self = this;
 
     self.filterWord = ko.observable('');
-
     // computed obserable to update view when filterword change 
     self.filter = ko.computed(function() {
     var search = self.filterWord().toLowerCase();
@@ -143,7 +125,6 @@ function initMap() {
       if (marker.title.toLowerCase().indexOf(search) !== -1) {
             marker.setVisible(true);
             return marker.listvisible(true);
-
       } else {
             marker.setVisible(false);
             return marker.listvisible(false);
@@ -151,13 +132,16 @@ function initMap() {
       }
       });
     });
-    // when click, infowindow
+    // when click, show infowindow
     self.popup = function(data){
       populateInfoWindow(data, largeInfowindow);      
-    }
-  };
+    };
 
-  ko.applyBindings(new viewModel);
+
+  }
+
+  ko.applyBindings(new viewModel());
+
 }
 
 
