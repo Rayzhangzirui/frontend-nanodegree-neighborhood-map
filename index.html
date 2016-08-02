@@ -25,7 +25,7 @@
         </button>
         <h1>Find Your New NYC Home</h1>
 
-          <div class="dropdown-menu d-block">
+          <div class="dropdown-menu">
             <div class="dropdown-item">
               <span class="text">Search for nearby places</span>
               <input id="places-search" type="text" data-bind="textInput:filterWord" placeholder="where"/>
@@ -36,7 +36,7 @@
             <div class="dropdown-item">
               <div data-bind="foreach: markers">
                 <div data-bind="visible: listvisible">
-                  <a href="#" data-bind="text: listTitle"></a> 
+                  <a href="#" data-bind="text: title, click:$parent.popup.bind($index)"></a> 
                 </div>
               </div>
             </div>
@@ -46,10 +46,10 @@
           
           <div id="map"></div>
   
-
+  <script type="text/javascript" src="js/map.js"></script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?libraries=places,geometry,drawing&key=AIzaSyCGK1tYoqb_uLU9XLQ8e5i0WlYGIcmLke4&v=3&callback=initMap">
   </script>
-  <script type="text/javascript" src="js/map.js"></script>
+
 
 
   </body>

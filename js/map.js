@@ -3,12 +3,12 @@ var map;
 var markers=[];
 
 locations =  [
-    {title: 'Park Ave Penthouse', location: {lat: 40.7713024, lng: -73.9632393}},
-    {title: 'Chelsea Loft', location: {lat: 40.7444883, lng: -73.9949465}},
-    {title: 'Union Square Open Floor Plan', location: {lat: 40.7347062, lng: -73.9895759}},
-    {title: 'East Village Hip Studio', location: {lat: 40.7281777, lng: -73.984377}},
-    {title: 'TriBeCa Artsy Bachelor Pad', location: {lat: 40.7195264, lng: -74.0089934}},
-    {title: 'Chinatown Homey Space', location: {lat: 40.7180628, lng: -73.9961237}}
+    {title: 'Empire State Building', location: {lat: 40.748441, lng: -73.985664}},
+    {title: 'Statue of Liberty', location: {lat: 40.689249, lng: -74.044500}},
+    {title: 'Central Park', location: {lat: 40.771133, lng: -73.974187}},
+    {title: 'Times Square', location: {lat: 40.759011, lng: -73.984472}},
+    {title: '9/11 Memorial', location: {lat: 40.711561, lng: -74.013174}},
+    {title: 'MoMA', location: {lat: 40.712784, lng: -74.005941}}
     ];
 
 
@@ -19,7 +19,7 @@ function initMap() {
   // Constructor creates a new map - only center and zoom are required.
   map = new google.maps.Map(document.getElementById('map'), {
     center: {lat: 40.7413549, lng: -73.9980244},
-    zoom: 13,
+    zoom: 12,
     styles: styles,
     mapTypeControl: false
   });
@@ -29,12 +29,12 @@ function initMap() {
   var highlightedIcon = makeMarkerIcon('FFFF24');
   var largeInfowindow = new google.maps.InfoWindow();
 
-
   // The following group uses the location array to create an array of markers on initialize.
   for (var i = 0; i < locations.length; i++) {
     // Get the position from the location array.
     var position = locations[i].location;
     var title = locations[i].title;
+    var marker = {};
     // Create a marker per location, and put into markers array.
     var marker = new google.maps.Marker({
       position: position,
@@ -44,8 +44,8 @@ function initMap() {
       id: i
       });
 
-    marker.listTitle = title;
-    marker.listisible = ko.observable(true);
+    marker.title = title;
+    marker.listvisible = ko.observable(true);
     marker.setMap(map);
     // Push the marker to our array of markers.
     markers.push(marker);
@@ -63,18 +63,18 @@ function initMap() {
   }
   // define infowindow
   function populateInfoWindow(marker, infowindow) {
-        // Check to make sure the infowindow is not already opened on this marker.
-        if (infowindow.marker != marker) {
-          // Clear the infowindow content to give the streetview time to load.
-          infowindow.setContent('');
-          infowindow.marker = marker;
-          // Make sure the marker property is cleared if the infowindow is closed.
-          infowindow.addListener('closeclick', function() {
-            infowindow.marker = null;
-          });
-          infowindow.open(map, marker);
-        }
-      }
+    // Check to make sure the infowindow is not already opened on this marker.
+    if (infowindow.marker != marker) {
+      // Clear the infowindow content to give the streetview time to load.
+      infowindow.setContent('');
+      infowindow.marker = marker;
+      // Make sure the marker property is cleared if the infowindow is closed.
+      infowindow.addListener('closeclick', function() {
+        infowindow.marker = null;
+      });
+      infowindow.open(map, marker);
+    }
+  }
 
   function makeMarkerIcon(markerColor) {
         var markerImage = new google.maps.MarkerImage(
@@ -86,32 +86,32 @@ function initMap() {
           new google.maps.Size(21,34));
         return markerImage;
       }
-}
 
+  function viewModel () {
+    var self = this;
 
-// Overall viewmodel for this screen, along with initial state
-function mapViewModel() {
-    var self = this;    
-    // Editable data
-    self.filterWord = ko.observable();
-    // filter 
-    self.filterWord.subscribe(function (newWord) {
-      console.log(newWord);
-      num = markers.length;
-      for (var i = 0; i < num; i++){    
-        if (markers[i].title.toLowerCase().indexOf(newWord.toLowerCase()) !== -1) {
-            console.log(markers[i]);
-            markers[i].listvisible(true);
-         }
-         else {
-            markers[i].listvisible(false);
-         }   
-       }
-    self.popup = function(){
+    self.filterWord = ko.observable('');
 
-    }
+    // computed obserable to update view when filterword change 
+    self.filter = ko.computed(function() {
+    var search = self.filterWord().toLowerCase();
+    return ko.utils.arrayFilter(markers, function(marker) {
+      if (marker.title.toLowerCase().indexOf(search) !== -1) {
+            return marker.listvisible(true);
+      } else {
+            return marker.listvisible(false);
+      }
+      });
     });
+    // when click, infowindow
+    self.popup = function(data){
+      populateInfoWindow(data, largeInfowindow);      
+    }
+  };
+
+  ko.applyBindings(new viewModel);
 }
 
 
-ko.applyBindings(new mapViewModel());
+
+
