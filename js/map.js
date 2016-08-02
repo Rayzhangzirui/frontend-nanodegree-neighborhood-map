@@ -73,8 +73,52 @@ function initMap() {
         infowindow.marker = null;
       });
       infowindow.open(map, marker);
+      getFlickrImages();
+
+          function getFlickrImages() {
+           var flickrUrl = 'https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=ab2be4f78cbc26981e3fe484038ad122&sort=interestingness-desc&extras=url_s&format=json&text='+marker.title.replace(/\s/g,'');
+
+           console.log(flickrUrl);
+                  $.ajax({
+                  url: flickrUrl,
+                  dataType: 'jsonp',
+                  jsonp: 'jsoncallback',
+                  success: function(data) {
+                      var photoUrl = data.photos.photo[1].url_s;
+                      console.log(photoUrl);
+                      infowindow.setContent('<h3>' + marker.title + '</h3><div id="pano"></div>');
+                      $('#pano').append('<img src='+photoUrl+'>');
+                  },
+                  error: function() {
+                    infowindow.setContent('<div>' + marker.title + '</div>' +
+                      '<div>No Street View Found</div>');
+                  }
+              });
+          }
     }
   }
+
+  //   function getStreetView(data, status) {
+  //           if (status == google.maps.StreetViewStatus.OK) {
+  //             var nearStreetViewLocation = data.location.latLng;
+  //             var heading = google.maps.geometry.spherical.computeHeading(
+  //               nearStreetViewLocation, marker.position);
+  //               infowindow.setContent('<div>' + marker.title + '</div><div id="pano"></div>');
+  //               var panoramaOptions = {
+  //                 position: nearStreetViewLocation,
+  //                 pov: {
+  //                   heading: heading,
+  //                   pitch: 30
+  //                 }
+  //               };
+  //             var panorama = new google.maps.StreetViewPanorama(
+  //               document.getElementById('pano'), panoramaOptions);
+  //           } else {
+  //             infowindow.setContent('<div>' + marker.title + '</div>' +
+  //               '<div>No Street View Found</div>');
+  //           }
+  //         }
+  // }
 
   function makeMarkerIcon(markerColor) {
         var markerImage = new google.maps.MarkerImage(
