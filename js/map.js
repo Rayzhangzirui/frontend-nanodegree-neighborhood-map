@@ -24,7 +24,8 @@ function initMap() {
   var largeInfowindow = new google.maps.InfoWindow();
 
   //use the location array to create an array of markers on initialize.
-  for (var i = 0; i < locations.length; i++) {
+
+  for (var i = 0,len = locations.length; i < len; i++) {
     // Get the position from the location array.
     var position = locations[i].location;
     var title = locations[i].title;
@@ -60,8 +61,8 @@ function initMap() {
   $('.dropdown').on('show.bs.dropdown', function () {
     for (var i = 0; i < markers.length;i++){
           largeInfowindow.close();
-        };
-  })
+        }
+  });
 
   // define infowindow
   function populateInfoWindow(marker, infowindow) {
@@ -120,21 +121,27 @@ function initMap() {
     self.filterWord = ko.observable('');
     // computed obserable to update view when filterword change 
     self.filter = ko.computed(function() {
-    var search = self.filterWord().toLowerCase();
-    return ko.utils.arrayFilter(markers, function(marker) {
-      if (marker.title.toLowerCase().indexOf(search) !== -1) {
-            marker.setVisible(true);
-            return marker.listvisible(true);
-      } else {
-            marker.setVisible(false);
-            return marker.listvisible(false);
-            
-      }
+      var search = self.filterWord().toLowerCase();
+       ko.utils.arrayFilter(markers, function(marker) {
+        if (marker.title.toLowerCase().indexOf(search) !== -1) {
+              marker.setVisible(true);
+              marker.listvisible(true);
+        } else {
+              marker.setVisible(false);
+              marker.listvisible(false);
+        }
+        });
       });
-    });
     // when click, show infowindow
-    self.popup = function(data){
-      populateInfoWindow(data, largeInfowindow);      
+    self.popup = function(marker){
+      populateInfoWindow(marker, largeInfowindow);      
+    };
+
+    self.highlight = function(marker) {
+      marker.setIcon(highlightedIcon);
+    };
+    self.lowlight = function(marker) {
+      marker.setIcon(defaultIcon);
     };
 
 
@@ -142,6 +149,11 @@ function initMap() {
 
   ko.applyBindings(new viewModel());
 
+}
+
+// error message 
+function googleerror(){
+  $('.dropdown').prepend('<h1>fail to load google map</h1>');
 }
 
 
